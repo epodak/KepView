@@ -167,7 +167,9 @@
     <Content Include="ApplicationInsights.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="scripts\jquery-2.2.0.min.map" />
+    <Content Include="scripts\jquery-2.2.1.js" />
+    <Content Include="scripts\jquery-2.2.1.min.js" />
+    <Content Include="scripts\jquery-2.2.1.min.map" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -178,9 +180,6 @@
   <ItemGroup>
     <Content Include="scripts\ai.0.15.0-build58334.js" />
     <Content Include="scripts\ai.0.15.0-build58334.min.js" />
-    <None Include="scripts\jquery-2.2.0.intellisense.js" />
-    <Content Include="scripts\jquery-2.2.0.js" />
-    <Content Include="scripts\jquery-2.2.0.min.js" />
     <Content Include="scripts\jquery.signalR-2.2.0.js" />
     <Content Include="scripts\jquery.signalR-2.2.0.min.js" />
     <Content Include="tables.xsl">
