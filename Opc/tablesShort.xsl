@@ -16,21 +16,87 @@ exclude-result-prefixes="xsl servermain">
 			<a href="/">
 				<h1>MSD Cramlington</h1>
 			</a>
-			<h2>Transit OPC Server Configuration</h2>
+			<h2>Transit OPC Server Tags</h2>
       
     <div class="indent">
+			<p/>
+			<xsl:apply-templates mode="contents"/>
+      <p/>
       <xsl:apply-templates/>
     </div>
   </div>
     <ul id="discussion"></ul>
 
   </xsl:template>
-  <xsl:template match = "*">
+	<xsl:template mode="contents" match = "*"/>
+	
+	<xsl:template mode="contents" match = "
+								servermain:Project 
+								| servermain:ChannelList 
+								| servermain:DeviceList
+								| servermain:TagGroupList">
+		<xsl:param name="tag-name"/>
+		<xsl:apply-templates mode="contents">
+			<xsl:with-param name="tag-name" select = "$tag-name" />
+		</xsl:apply-templates>
+	
+	</xsl:template>
+
+	<xsl:template  mode="contents"  match = "servermain:Channel 
+								| servermain:Device
+								| servermain:TagGroup
+								| servermain:Tags">
+		<xsl:param name="tag-name"/>
+
+		<div>
+			<a>
+				<xsl:attribute name="href" >
+					<xsl:value-of select="concat('#' ,local-name(), '-' , $tag-name, '.', servermain:Name/text())"/>
+				</xsl:attribute>
+				<xsl:value-of select = "local-name()"/>:
+				<xsl:value-of select = "servermain:Name/text()"/>
+			</a>
+		</div>
+		<div class="contents-indent">
+			<xsl:if test='name()="servermain:Channel"'>
+				<xsl:apply-templates mode='contents'>
+					<xsl:with-param name='tag-name' select='servermain:Name/text()'/>
+				</xsl:apply-templates>
+			</xsl:if>
+			<xsl:if test='name()="servermain:Device" or name()="servermain:TagGroup"'>
+				<xsl:apply-templates mode='contents'>
+					<xsl:with-param name='tag-name' select='concat($tag-name, ".", servermain:Name/text())'/>
+				</xsl:apply-templates>
+			</xsl:if>
+			<xsl:if test='name()!="servermain:Channel" and name()!="servermain:Device" and name()!="servermain:TagGroup"'>
+				<xsl:apply-templates mode='contents'>
+					<xsl:with-param name='tag-name' select='$tag-name'/>
+				</xsl:apply-templates>
+			</xsl:if>
+		</div>
+	</xsl:template>
+		<xsl:template match = "*"></xsl:template>
+	<xsl:template match = "servermain:ChannelList 
+								| servermain:DeviceList 
+								| servermain:TagGroupList">
+		<xsl:param name="tag-name"/>
+		<xsl:apply-templates>
+			<xsl:with-param name="tag-name" select = "$tag-name" />
+		</xsl:apply-templates>
+	</xsl:template>
+		<xsl:template match = "servermain:Project 
+								| servermain:Channel 
+								| servermain:Device
+								| servermain:TagGroup
+								| servermain:Tags">
     <xsl:param name="tag-name"/>
     <xsl:if test='local-name()!="parsererror"'>
       <xsl:if test='local-name()!="Name"'>
         <xsl:if test='.//*[text()]'>
           <div class="title">
+						<xsl:attribute name="id" >
+							<xsl:value-of select="concat(local-name(), '-' , $tag-name, '.', servermain:Name/text())"/>
+						</xsl:attribute>
               <xsl:call-template name="SplitCamelCase">
                 <xsl:with-param name="text" select = "local-name()" />
               </xsl:call-template>
@@ -61,51 +127,16 @@ exclude-result-prefixes="xsl servermain">
             </xsl:if>
           </div>
         </xsl:if>
-        <xsl:if test='count(.//*[text()])=0'>
+        <!--<xsl:if test='count(.//*[text()])=0'>
           <xsl:call-template name="value-row"/>
-        </xsl:if>
+        </xsl:if>-->
       </xsl:if>
     </xsl:if>
-  </xsl:template>
-  <xsl:template name="value-row">
-    <xsl:param name = "name" />
-    <xsl:param name = "value" />
-    <div class="row">
-      <div class="col-xs-12 col-sm-3 col-md-2">
-        <div class="box name">
-          <xsl:call-template name="SplitCamelCase">
-            <xsl:with-param name="text" select = "local-name()" />
-          </xsl:call-template>
-        </div>
-      </div>
-      <div class="col-xs">
-        <div class="box value">
-          <xsl:value-of select="."/>
-        </div>
-      </div>
-    </div>
-  </xsl:template>
-  <xsl:template match="servermain:Value">
-    <div class="row">
-      <div class="col-xs-12 col-sm-3 col-md-2">
-        <div class="box name">
-          <xsl:call-template name="SplitCamelCase">
-            <xsl:with-param name="text" select = "@Name" />
-          </xsl:call-template>
-        </div>
-      </div>
-      <div class="col-xs">
-        <div class="box value">
-          <xsl:value-of select="."/>
-        </div>
-      </div>
-    </div>
   </xsl:template>
   <xsl:template match="servermain:TagList">
     <xsl:param name="tag-name"/>
     <xsl:if test="./servermain:Tag">
       <div class="if-xs">
-        <div class="title">Tags</div>
         <div class="indent">
           <xsl:apply-templates>
             <xsl:with-param name="tag-name" select="$tag-name"/>
@@ -117,7 +148,7 @@ exclude-result-prefixes="xsl servermain">
           <div class="title">Tags</div>
           <div class="indent">
             <div class="row header">
-              <div class="col-xs-12 col-sm-4 col-md-2">
+              <div class="col-xs-12 col-sm-4 col-md-3">
                 <div class="box">
                   Name
                 </div>
@@ -135,11 +166,6 @@ exclude-result-prefixes="xsl servermain">
               <div class="col-xs-12 col-sm-1">
                 <div class="box">
                   R/W
-                </div>
-              </div>
-              <div class="col-xs-12 col-sm-2 col-md-1">
-                <div class="box">
-                  Respect GUI
                 </div>
               </div>
               <div class="col-xs if-not-sm">
@@ -168,7 +194,7 @@ exclude-result-prefixes="xsl servermain">
     <div class="if-not-xs">
       
       <div class="row">
-        <div class="col-xs-12 col-sm-4 col-md-2">
+        <div class="col-xs-12 col-sm-4 col-md-3">
           <div class="box break">
             <xsl:value-of select="servermain:Name"/>
           </div>
@@ -191,11 +217,6 @@ exclude-result-prefixes="xsl servermain">
             </xsl:if>
           </div>
         </div>
-        <div class="col-xs-12 col-sm-2 col-md-1">
-          <div class="box">
-            <xsl:value-of select="servermain:RespectGUIDataType"/>
-          </div>
-        </div>
         <div class="col-xs-12 col-sm-12 col-md">
           <div class="box">
             <xsl:value-of select="servermain:Description"/>
@@ -209,8 +230,13 @@ exclude-result-prefixes="xsl servermain">
       </div>
 			<div class="row">
 				<div class="col-xs-1"></div>
+				<div class="col-xs-4">
+					<div class="box" title="path to tag">
+						<xsl:value-of select="concat($tag-name, '.', $name)"/>
+					</div>
+				</div>
 				<div class="col-xs">
-					<div class="box break value-status">
+					<div class="box break  value-status" title ="current tag value">
 						<span>
 							<xsl:attribute name="class" >
 								<xsl:value-of select="concat('tag-' , $tag-name, '.', $name)"/>
@@ -266,26 +292,25 @@ exclude-result-prefixes="xsl servermain">
       <div class="row">
         <div class="col-xs-12 header">
           <div class="box">
-            Respect GUI Data Type
-          </div>
-        </div>
-        <div class="col-xs-12 value">
-          <div class="box">
-            <xsl:value-of select="servermain:RespectGUIDataType"/>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-12 header">
-          <div class="box">
             Description
           </div>
         </div>
+				
         <div class="col-xs-12 value">
           <div class="box">
             <xsl:value-of select="servermain:Description"/>
           </div>
         </div>
+				<div class="col-xs-12 header">
+					<div class="box">
+						Path to tag
+					</div>
+				</div>
+				<div class="col-xs-12 value">
+					<div class="box break">
+							<xsl:value-of select="concat('tag-' , $tag-name, '.', $name)"/>
+					</div>
+				</div>
 				<div class="col-xs-12 header">
 					<div class="box">
 						Value

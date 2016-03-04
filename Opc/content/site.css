@@ -18,6 +18,13 @@
     margin-left:10px;
     margin-bottom:10px;
   }
+  .contents-indent {
+    margin-left:10px;
+  }
+  .contents-indent div {
+    padding-top:5px;
+	padding-bottom:5px;
+  }
   .box {
     padding: 5px 5px 5px 5px;
   }
@@ -36,6 +43,9 @@
   }
   .break {
       word-break : break-all;
+  }
+  .value-status {
+	  font-weight:bold;
   }
   .good-status {
     color:green;

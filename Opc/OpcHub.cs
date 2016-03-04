@@ -12,6 +12,7 @@ using OpcLabs.EasyOpc.UA.OperationModel;
 using System.Threading;
 using OpcLabs.EasyOpc.UA;
 using static System.Diagnostics.Debug;
+using System.Configuration;
 
 namespace Opc
 {
@@ -23,7 +24,14 @@ namespace Opc
         static Lazy<ConcurrentDictionary<string, GroupInfo>> GroupInfos = 
             new Lazy<ConcurrentDictionary<string, GroupInfo>>(() => 
                 new ConcurrentDictionary<string, GroupInfo>());
-        
+
+		static Lazy<string> Server = new Lazy<string>(() => ConfigurationManager.AppSettings["opc-server"]);
+		static Lazy<EasyUAClient> Client = new Lazy<EasyUAClient>(()=>
+		{
+			var v = new EasyUAClient();
+			v.MonitoredItemChanged += changes;
+			return v;
+		});
 
         public override Task OnConnected()
         {
@@ -54,12 +62,11 @@ namespace Opc
             }).Where(sub => sub != 0)
             .ToList();
 
-            client.UnsubscribeMultipleMonitoredItems(removers);
+            Client.Value.UnsubscribeMultipleMonitoredItems(removers);
             
             return base.OnDisconnected(stopCalled);
         }
 
-        public static EasyUAClient client;
         public static void changes(object sender, EasyUAMonitoredItemChangedEventArgs e)
         {
             GroupInfo value;
@@ -97,11 +104,6 @@ namespace Opc
 			};
 		 }
 
-        public static void Setup()
-        {
-            client = new EasyUAClient();
-            client.MonitoredItemChanged += changes;
-        }
         
         public void Subscribe(IEnumerable<string> messages)
         {
@@ -130,7 +132,7 @@ namespace Opc
             }).Where(g=>g!=null).ToList();
 
             
-            var rr = client.SubscribeMultipleMonitoredItems(addedGroups.Select(g => ReadArgs(g.Name)).ToArray());
+            var rr = Client.Value.SubscribeMultipleMonitoredItems(addedGroups.Select(g => ReadArgs(g.Name)).ToArray());
 
             rr.Select((i, id) => new { i, id }).ToList().ForEach(r => addedGroups.ElementAt(r.id).SubscribeId = r.i);
             
@@ -147,7 +149,7 @@ namespace Opc
         {
             return new EasyUAMonitoredItemArguments(
                     node,
-                    "opc.tcp://127.0.0.1:49320/",
+                    Server.Value,
                     $"ns=2;s={node}",
                     1000);
         }
