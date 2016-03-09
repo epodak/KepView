@@ -188,6 +188,7 @@
     <Content Include="content\site.css" />
     <Content Include="CurrentOPCServerConfiguration.xml" />
     <Content Include="full-documentation.html" />
+    <Content Include="menu.html" />
     <Content Include="tags.html" />
     <Content Include="index.html" />
     <Content Include="packages.config" />

@@ -35,7 +35,6 @@ namespace Opc
 
         public override Task OnConnected()
         {
-            System.Diagnostics.Debug.WriteLine("ok connected");
             return base.OnConnected();
         }
         public override Task OnDisconnected(bool stopCalled)
@@ -73,8 +72,7 @@ namespace Opc
             if(GroupInfos.Value.TryGetValue(e.Arguments.State.ToString(), out value)){
                 lock(value)
                 {
-					WriteLine(e.Arguments.State.ToString());
-                    if (e.Handle == value.SubscribeId)
+					if (e.Handle == value.SubscribeId)
                     {
                         value.Value = e;
 
@@ -109,8 +107,7 @@ namespace Opc
         {
             var addedGroups = messages.Select(node =>
             {
-				WriteLine($"added:{node}");
-                Groups.Add(Context.ConnectionId, node);
+				Groups.Add(Context.ConnectionId, node);
                 var group = GroupInfos.Value.AddOrUpdate(node, new GroupInfo(node, Context.ConnectionId), (n, gi) =>
                 {
 					if(!gi.Connections.Contains(Context.ConnectionId))
@@ -142,8 +139,30 @@ namespace Opc
         public void Remove(string name, IEnumerable<string> messages)
         {
             messages.ToList().ForEach(node => Groups.Remove(Context.ConnectionId, node));
-               
-        }
+			var removers = messages.Select(node =>
+			{
+				GroupInfo group;
+				if(GroupInfos.Value.TryGetValue(node, out group))
+				lock (group)
+				{
+					group.Connections.Remove(Context.ConnectionId);
+					if (!group.Connections.Any())
+					{
+						var sub = group.SubscribeId;
+						group.SubscribeId = 0;
+						group.Subscribed = false;
+						group.Value = null;
+						return sub;
+					}
+
+					else
+						return default(int);
+				}
+				else
+					return default(int);
+			}).Where(n => n > 0).ToArray();
+			Client.Value.UnsubscribeMultipleMonitoredItems(removers);
+		}
 
         static EasyUAMonitoredItemArguments ReadArgs(string node)
         {

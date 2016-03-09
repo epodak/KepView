@@ -13,14 +13,10 @@ namespace Opc
 	public class OpcController : ApiController
 	{
 		// GET api/<controller>
-		public IEnumerable<string> Get()
-		{
-			return new string[] { "value1", "value2" };
-		}
-
 		// GET api/<controller>/5
 		public IEnumerable<object> Get(string resourcePath, string query = null)
 		{
+			
 			var server = ConfigurationManager.AppSettings["opc-server"];
 			using (var client = new EasyUAClient())
 			{
@@ -28,22 +24,22 @@ namespace Opc
 				switch (query)
 				{
 					case "variables":
-						nodes = client.BrowseVariables(server, $"ns=2;s={resourcePath.Replace("/", ".")}");
+						nodes = client.BrowseVariables(server, $"ns=2;s={resourcePath?.Replace("/", ".")}");
 						break;
 					case "properties":
-						nodes = client.BrowseProperties(server, $"ns=2;s={resourcePath.Replace("/", ".")}");
+						nodes = client.BrowseProperties(server, $"ns=2;s={resourcePath?.Replace("/", ".")}");
 						break;
 					case "methods":
-						nodes = client.BrowseMethods(server, $"ns=2;s={resourcePath.Replace("/", ".")}");
+						nodes = client.BrowseMethods(server, $"ns=2;s={resourcePath?.Replace("/", ".")}");
 						break;
 					case "objects":
-						nodes = client.BrowseObjects(server, $"ns=2;s={resourcePath.Replace("/", ".")}");
+						nodes = client.BrowseObjects(server);//, $"ns=2;s={resourcePath?.Replace("/", ".")}");
 						break;
 					case "dataNodes":
-						nodes = client.BrowseDataNodes(server, $"ns=2;s={resourcePath.Replace("/", ".")}");
+						nodes = client.BrowseDataNodes(server, $"ns=2;s={resourcePath?.Replace("/", ".")}");
 						break;
 					case "dataVariables":
-						nodes = client.BrowseDataVariables(server, $"ns=2;s={resourcePath.Replace("/", ".")}");
+						nodes = client.BrowseDataVariables(server, $"ns=2;s={resourcePath?.Replace("/", ".")}");
 						break;
 
 
