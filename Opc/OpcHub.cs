@@ -169,7 +169,7 @@ namespace Opc
             return new EasyUAMonitoredItemArguments(
                     node,
                     Server.Value,
-                    $"ns=2;s={node}",
+                    node,
                     1000);
         }
         static UAMonitoredItemChangedObservable<object> ReadValues(string node)

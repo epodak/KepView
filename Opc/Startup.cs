@@ -33,7 +33,7 @@ namespace Opc
 		{
 			config.Routes.MapHttpRoute(
 				name: "api",
-				routeTemplate: "api/{controller}/{*resourcePath}"
+				routeTemplate: "api/{controller}"
 				);
 		}
 	}
