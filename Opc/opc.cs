@@ -15,83 +15,81 @@ namespace Opc
 	{
 
 
-		static UANodeElement GetNode(string server, EasyUAClient client, IEnumerable<string> path, UANodeElement parent)
+		static IEnumerable<UANodeElement> GetNode(string server, EasyUAClient client, IEnumerable<string> path, IEnumerable<UANodeElement> currentNodes)
 		{
+			var _currentNodes = currentNodes ?? new List<UANodeElement>();
 			if (!path.Any())
-				return parent;
+				return currentNodes;
 			UANodeElementCollection nodes = new UANodeElementCollection();
-			if (parent==null)
+			if (!_currentNodes.Any())
 			{
 				nodes = client.BrowseObjects(server);
+				
 			}
 			else
 			{
-				nodes = client.BrowseVariables(server, parent);
+				nodes = client.BrowseVariables(server, currentNodes.Last());
 			}
 			var node = nodes.SingleOrDefault(n => n.BrowseName.Name == path.First());
 			if(node!=null)
-				return GetNode(server, client, path.Skip(1), node);
-			return null;
+				return GetNode(server, client, path.Skip(1), _currentNodes.Concat(new List<UANodeElement> { node }));
+			return new List<UANodeElement>();
 		}
 
+
+		static object NodeReturn(UANodeElement node)
+		{
+			if (node == null) return null;
+			return new
+			{
+				BrowsePath = new
+				{
+					StartingNodeId = node.BrowsePath.StartingNodeId.StandardName,
+					Elements = node.BrowsePath.Elements.Select(e => e.ToString())
+				},
+				node.DisplayName,
+				BrowseName = node.BrowseName.ToString(),
+				NodeId = new
+				{
+					node.NodeId.StandardName,
+					node.NodeId.ExpandedText,
+					node.NodeId.GuidIdentifierString,
+					node.NodeId.StringIdentifier,
+					node.NodeId.NumericIdentifier,
+					node.NodeId.NamespaceIndex,
+					node.NodeId.NamespaceUriString,
+					node.NodeId.NodeIdType
+				},
+				ReferenceTypeId = node.ReferenceTypeId.StandardName,
+				NodeClass = node.NodeClass.ToString()
+			};
+		}
 		// GET api/<controller>
 		// GET api/<controller>/5
-		public IEnumerable<object> Get([FromUri] string[] path, string query = null)
+		public object Get([FromUri] string[] path, string query = null)
 		{
 			
 			var server = ConfigurationManager.AppSettings["opc-server"];
 			using (var client = new EasyUAClient())
 			{
-				UANodeElement node= null;
 				UANodeElementCollection nodes = new UANodeElementCollection();
 				path = path.Where(p=>p!= null).ToArray();//.FirstOrDefault()?.Split('/');
+
+				var nodePath = new List<UANodeElement>();
 				if (!path.Any())
 					nodes = client.BrowseObjects(server);
 				else
 				{
-					node = GetNode(server, client, path, null);
-					if(node==null) return null;
-						nodes = client.BrowseVariables(server, GetNode(server, client, path, null));
-				}
-				if(node!=null)
-				{
-					
-					var ok2 = client.Read(new UANodeArguments(server, node.ToUANodeDescriptor()));
-					var ok = client.Read(new UANodeArguments(server, node.ToUANodeDescriptor()), UAAttributeId.EventNotifier);
-					var dvs = client.BrowseDataVariables(server, node);
-					var dns = client.BrowseDataNodes(server, node);
-					var ms = client.BrowseMethods(server, node);
-					var obs = client.BrowseObjects(server, node);
-					var prs = client.BrowseProperties(server, node);
-					var vs = client.BrowseVariables(server, node);
-					
+					nodePath = GetNode(server, client, path, null).ToList();
+					if(!nodePath.Any()) return null;
+					nodes = client.BrowseVariables(server, nodePath.Last());
 				}
 				
-				var rets =
-				nodes.Select(v =>
-					new {
-						BrowsePath = new
-						{
-							StartingNodeId = v.BrowsePath.StartingNodeId.StandardName,
-							Elements = v.BrowsePath.Elements.Select(e => e.ToString())
-						},
-						v.DisplayName,
-						BrowseName = v.BrowseName.ToString(),
-						NodeId = new {
-							v.NodeId.StandardName,
-							v.NodeId.ExpandedText,
-							v.NodeId.GuidIdentifierString,
-							v.NodeId.StringIdentifier,
-							v.NodeId.NumericIdentifier,
-							v.NodeId.NamespaceIndex,
-							v.NodeId.NamespaceUriString,
-							v.NodeId.NodeIdType
-						} ,
-						ReferenceTypeId = v.ReferenceTypeId.StandardName,
-						NodeClass = v.NodeClass.ToString(),
-						StringIdentifier = v.NodeId?.StringIdentifier?.ToString()
-					}).ToList();
-				return rets;
+
+				return new { path = path.Select((p, i) => new {
+					browseName = p,
+					node = NodeReturn(nodePath.ElementAtOrDefault(i)) }),
+					children = nodes.Select(NodeReturn) };
 			}
 
 				

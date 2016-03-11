@@ -105,7 +105,7 @@ namespace Opc
         
         public void Subscribe(IEnumerable<string> messages)
         {
-            var addedGroups = messages.Select(node =>
+            var addedGroups = messages.Where(m => m != null).Select(node =>
             {
 				Groups.Add(Context.ConnectionId, node);
                 var group = GroupInfos.Value.AddOrUpdate(node, new GroupInfo(node, Context.ConnectionId), (n, gi) =>
@@ -138,8 +138,8 @@ namespace Opc
 
         public void Remove(string name, IEnumerable<string> messages)
         {
-            messages.ToList().ForEach(node => Groups.Remove(Context.ConnectionId, node));
-			var removers = messages.Select(node =>
+            messages.Where(m=>m!= null).ToList().ForEach(node => Groups.Remove(Context.ConnectionId, node));
+			var removers = messages.Where(m => m != null).Select(node =>
 			{
 				GroupInfo group;
 				if(GroupInfos.Value.TryGetValue(node, out group))

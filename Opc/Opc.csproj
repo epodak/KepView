@@ -240,7 +240,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>18939</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:18939/</IISUrl>
+          <IISUrl>http://localhost:18938/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>
